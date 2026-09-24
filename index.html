@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JalDrishti Flood Nowcast</title>
+<meta name="description" content="Street-level flood nowcast prototype for the Kodambakkam zone (West Mambalam, Ashok Nagar), Chennai. Smart India Hackathon 2026, SIH26085.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 30%22%3E%3Crect x=%221%22 y=%221%22 width=%2228%22 height=%2228%22 rx=%228%22 fill=%22%2316243a%22/%3E%3Cpath d=%22M6 17c3-3 6 3 9 0s6 3 9 0%22 fill=%22none%22 stroke=%22%2386b6ef%22 stroke-width=%222.4%22/%3E%3Cpath d=%22M6 21.5c3-3 6 3 9 0s6 3 9 0%22 fill=%22none%22 stroke=%22%233987e5%22 stroke-width=%222.4%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <rect x="1" y="1" width="28" height="28" rx="8" fill="#16243a" stroke="#2c4a73"/>
+        <path d="M6 17c3-3 6 3 9 0s6 3 9 0" fill="none" stroke="#86b6ef" stroke-width="2" stroke-linecap="round"/>
+        <path d="M6 21.5c3-3 6 3 9 0s6 3 9 0" fill="none" stroke="#3987e5" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="15" cy="10" r="3" fill="none" stroke="#e9edf2" stroke-width="1.8"/>
+      </svg>
+      <div class="brand-text">
+        <h1>JalDrishti</h1>
+        <div class="sub">Street-level flood nowcast, Kodambakkam zone (West Mambalam, Ashok Nagar), Chennai (prototype)</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip">SIH26085 &middot; MoES / NCMRWF</span>
+    <span class="chip warn" title="Synthetic storm, uncalibrated hydraulics, twin-test drain states">Prototype on test data</span>
+    <a class="top-link" href="about.html">Method and data</a>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" data-panel="flood">Flood map</button>
+    <button class="tab" role="tab" data-panel="route">Safe route</button>
+    <button class="tab" role="tab" data-panel="priority">Desilting</button>
+    <button class="tab" role="tab" data-panel="twin">Twin test</button>
+    <button class="tab" role="tab" data-panel="radar">Radar</button>
+  </nav>
+
+  <aside class="side">
+    <section class="panel" data-panel="flood" hidden>
+      <h2>Street flood depth</h2>
+      <p class="lede">Water depth on each of <b id="f-nseg" class="num"></b> street segments that run above surveyed GCC storm-water drains, every 10 minutes for 3 hours.</p>
+      <div class="kpis">
+        <div class="kpi"><div class="label"><span class="swatch" style="background:var(--d2)"></span>Over 15 cm</div><div class="value" id="k15"></div><div class="of" id="k15-of"></div></div>
+        <div class="kpi"><div class="label"><span class="swatch" style="background:var(--d3)"></span>30 cm or more</div><div class="value" id="k30"></div><div class="of">segments, treated as closed</div></div>
+        <div class="kpi"><div class="label">Deepest segment</div><div class="value" id="kmax"></div><div class="of" id="kmax-street"></div></div>
+        <div class="kpi"><div class="label">Rain, last 10 min</div><div class="value" id="krain"></div><div class="of">synthetic, uniform</div></div>
+      </div>
+      <h3>Over the storm</h3>
+      <div class="chart" id="chart"><div class="chart-tip" id="chart-tip"></div></div>
+      <p class="note">Minutes since the rain started. Top: rain rate. Bottom: segments over 15 cm and at 30 cm or more. Click the chart to jump to a time.</p>
+      <h3>Drain state</h3>
+      <div class="callout" id="state-note"></div>
+      <h3>What to trust</h3>
+      <ul class="caveats">
+        <li>Rain is a synthetic storm, the same everywhere on the site. It is not a radar nowcast.</li>
+        <li>Hydraulic parameters (Manning roughness, inlet size and spacing, catchment width) are assumed values, not calibrated against observed floods.</li>
+        <li>The street surface is 1D street channels along the surveyed drains, not a 2D grid. Streets without a surveyed drain are not modelled.</li>
+        <li>Segment depth is the larger of its two end-junction street depths.</li>
+        <li id="pool-caveat"></li>
+      </ul>
+    </section>
+
+    <section class="panel" data-panel="route" hidden>
+      <h2>Flood-safe routing</h2>
+      <p class="lede">Click the map to set a start, then an end. Each point snaps to the nearest junction. Routes update with the time, storm and drain state below the map.</p>
+      <div class="route-points">
+        <div class="pt"><div class="label">Start (A)</div><div class="value" id="r-from">not set</div></div>
+        <div class="pt"><div class="label">End (B)</div><div class="value" id="r-to">not set</div></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="r-example">Example trip</button>
+        <button class="btn" id="r-swap">Swap</button>
+        <button class="btn" id="r-clear">Clear</button>
+      </div>
+      <div id="r-out"></div>
+      <h3>How travel time is set</h3>
+      <p class="note">Speed on a flooded segment follows the depth-disruption curve of Pregnolato et al. (2017): <span class="num">v = 0.0009 w&sup2; &minus; 0.5529 w + 86.9448</span> km/h with water depth w in mm, capped at an assumed <span class="num" id="r-cap"></span> km/h for city streets. Segments with <span class="num" id="r-closed"></span> cm of water or more are closed: every metre of closed street carries a large time penalty, so the safe route avoids closed streets whenever any open route exists. When none exists, the card says so and shows the least flooded route: its deepest water is as shallow as possible, then it crosses the least length of closed street.</p>
+      <p class="note">The graph is the <span class="num" id="r-nseg"></span> segments that carry a surveyed drain, treated as two-way streets. It is not the full road network. Depths are model output under a synthetic storm.</p>
+      <p class="note">From the browser console: <code class="inline">JalDrishti.route(272, 346, {t: 100, storm: 60, state: "clean"})</code></p>
+    </section>
+
+    <section class="panel" data-panel="priority" hidden>
+      <h2>Desilting priority</h2>
+      <p class="lede">Which drains would make flooding worst if they silted up? One adjoint (reverse-mode gradient) pass of the model ranks every drain at once.</p>
+      <div class="kpis">
+        <div class="kpi"><div class="label">Adjoint pass</div><div class="value" id="p-adj"></div><div class="of">one run, all drains</div></div>
+        <div class="kpi"><div class="label">Brute force</div><div class="value" id="p-bf"></div><div class="of" id="p-bf-of"></div></div>
+        <div class="kpi"><div class="label">Spearman vs brute force</div><div class="value" id="p-sp"></div><div class="of">per segment</div></div>
+        <div class="kpi"><div class="label">Top-20 overlap</div><div class="value" id="p-ov"></div><div class="of">per segment</div></div>
+      </div>
+      <h3>Top 20 drains, flood volume added at 50% silt, m&sup3;&middot;h</h3>
+      <ol class="rank-list" id="p-list"></ol>
+      <p class="note" id="p-summary"></p>
+      <div class="callout info" id="p-method"></div>
+    </section>
+
+    <section class="panel" data-panel="twin" hidden>
+      <h2>Twin test: finding silted drains</h2>
+      <p class="lede">Can a few street-depth reports reveal which drains are silted? Here silt was planted in the model, and the same model then inferred it from simulated gauges.</p>
+      <div class="callout twin"><b>Identical-twin test, not a field finding.</b> The planted drains are a test case. No drain on this map has been inspected.</div>
+      <h3>This run</h3>
+      <div class="kpis">
+        <div class="kpi"><div class="label">Planted drains in top 4</div><div class="value" id="w-hits"></div><div class="of" id="w-hits-of"></div></div>
+        <div class="kpi"><div class="label" id="w-flag-label"></div><div class="value" id="w-flag"></div><div class="of" id="w-flag-of"></div></div>
+        <div class="kpi"><div class="label">Flooded-junction error, before</div><div class="value" id="w-before"></div><div class="of">clean drains assumed</div></div>
+        <div class="kpi"><div class="label">After inference</div><div class="value" id="w-after"></div><div class="of" id="w-after-of"></div></div>
+      </div>
+      <p class="note" id="w-setup"></p>
+      <h3>Candidate drains, estimated silt</h3>
+      <table class="data" id="w-table"></table>
+      <h3>Across all twin runs</h3>
+      <table class="data" id="w-summary"></table>
+      <p class="note" id="w-summary-note"></p>
+      <h3>Caveats</h3>
+      <ul class="caveats" id="w-caveats"></ul>
+    </section>
+
+    <section class="panel" data-panel="radar" hidden>
+      <h2>Radar rain nowcast</h2>
+      <div class="callout twin" id="rd-offline"></div>
+      <p class="lede" id="rd-lede"></p>
+      <div class="btn-row">
+        <button class="btn" id="rd-rain">Zoom to rain</button>
+        <button class="btn" id="rd-ring">Full radar range</button>
+      </div>
+      <h3>Latest hold-out, CSI at <span id="rd-thr"></span> mm/h</h3>
+      <table class="data" id="rd-holdout"></table>
+      <p class="note" id="rd-holdout-note"></p>
+      <h3>Rolling backtest, pooled CSI at <span id="rd-thr2"></span> mm/h</h3>
+      <table class="data" id="rd-backtest"></table>
+      <p class="note" id="rd-backtest-note"></p>
+      <h3>Notes</h3>
+      <ul class="caveats" id="rd-notes"></ul>
+    </section>
+  </aside>
+
+  <div class="stage">
+    <div id="map" aria-label="Flood map"></div>
+    <div id="radar-map" aria-label="Radar map" hidden></div>
+    <div class="legend" id="legend"></div>
+
+    <div class="dock" id="dock">
+      <div class="dock-row">
+        <button class="play" id="play" aria-label="Play"></button>
+        <div class="clock"><div class="t num" id="tlabel"></div><div class="s" id="tsub"></div></div>
+        <div class="slider-wrap">
+          <input type="range" id="t" min="0" step="1" aria-label="Time since rain start">
+          <div class="ticks" id="ticks"></div>
+        </div>
+      </div>
+      <div class="dock-row">
+        <div class="seg-group"><span class="label">Storm</span><div class="seg" id="storm-seg"></div></div>
+        <div class="seg-group"><span class="label">Drains</span><div class="seg" id="state-seg"></div></div>
+      </div>
+      <div class="fine"><b>Prototype.</b> Synthetic, spatially uniform storm &middot; uncalibrated hydraulics &middot; 1D street channels along surveyed drains, not a 2D grid</div>
+    </div>
+
+    <div class="dock" id="radar-dock" hidden>
+      <div class="dock-row">
+        <button class="play" id="rplay" aria-label="Play radar"></button>
+        <div class="clock"><div class="t num" id="rlabel"></div><div class="s" id="rsub"></div></div>
+        <div class="slider-wrap">
+          <input type="range" id="rframe" min="0" step="1" aria-label="Radar frame">
+          <div class="ticks" id="rticks"></div>
+        </div>
+      </div>
+      <div class="fine" id="rfine"></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>window.L || document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"><script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>');</script>
+<script src="data.js"></script>
+<script src="route.js"></script>
+<script src="panels.js"></script>
+<script src="radar.js"></script>
+<script src="app.js"></script>
+<script>
+window.addEventListener("load", () => {
+  if (document.body.dataset.ready === "1") return;
+  const note = document.createElement("div");
+  note.className = "load-fail";
+  note.innerHTML = 'The page did not finish loading. <a href="">Reload</a>';
+  document.body.appendChild(note);
+});
+</script>
+</body>
+</html>

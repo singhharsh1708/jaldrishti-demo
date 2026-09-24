@@ -1,0 +1,756 @@
+{
+ "city": "Mumbai",
+ "product": "caz_mum",
+ "product_name": "MAX(Z)",
+ "radar_lat": 18.9013,
+ "radar_lon": 72.8075,
+ "radar_latlon_source": "printed in the IMD image header",
+ "km_per_px": 0.9066,
+ "grid_km": 1.0,
+ "range_km": 250.0,
+ "frame_spacing_min": 10.2,
+ "scale_mm_h": [
+  {
+   "min": 0.5,
+   "max": 1.0,
+   "color": "#86b6ef"
+  },
+  {
+   "min": 1.0,
+   "max": 2.0,
+   "color": "#5598e7"
+  },
+  {
+   "min": 2.0,
+   "max": 5.0,
+   "color": "#2a78d6"
+  },
+  {
+   "min": 5.0,
+   "max": 10.0,
+   "color": "#1c5cab"
+  },
+  {
+   "min": 10.0,
+   "max": null,
+   "color": "#104281"
+  }
+ ],
+ "frames": [
+  {
+   "time_utc": "2026-09-24T14:01:45Z",
+   "kind": "observed",
+   "png": "data/radar/obs_20260924T140145Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "source_file": "20260924T141501Z_25736242e8596631.gif"
+  },
+  {
+   "time_utc": "2026-09-24T14:11:57Z",
+   "kind": "observed",
+   "png": "data/radar/obs_20260924T141157Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "source_file": "20260924T143001Z_8beb6e652bab54e3.gif"
+  },
+  {
+   "time_utc": "2026-09-24T14:22:10Z",
+   "kind": "observed",
+   "png": "data/radar/obs_20260924T142210Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "source_file": "20260924T143501Z_ba4b692026102a12.gif"
+  },
+  {
+   "time_utc": "2026-09-24T14:32:22Z",
+   "kind": "observed",
+   "png": "data/radar/obs_20260924T143222Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "source_file": "20260924T144501Z_33b113e2beae1420.gif"
+  },
+  {
+   "time_utc": "2026-09-24T14:42:34Z",
+   "kind": "observed",
+   "png": "data/radar/obs_20260924T144234Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "source_file": "20260924T150001Z_940918f2885c7aa3.gif"
+  },
+  {
+   "time_utc": "2026-09-24T14:52:50Z",
+   "kind": "observed",
+   "png": "data/radar/obs_20260924T145250Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "source_file": "20260924T150502Z_34f23f1da71c7fa1.gif"
+  },
+  {
+   "time_utc": "2026-09-24T15:03:02Z",
+   "kind": "nowcast",
+   "lead_min": 10.2,
+   "png": "data/radar/nowcast_20260924T150302Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "method": "pysteps Lucas-Kanade + semi-Lagrangian extrapolation"
+  },
+  {
+   "time_utc": "2026-09-24T15:13:14Z",
+   "kind": "nowcast",
+   "lead_min": 20.4,
+   "png": "data/radar/nowcast_20260924T151314Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "method": "pysteps Lucas-Kanade + semi-Lagrangian extrapolation"
+  },
+  {
+   "time_utc": "2026-09-24T15:23:26Z",
+   "kind": "nowcast",
+   "lead_min": 30.6,
+   "png": "data/radar/nowcast_20260924T152326Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "method": "pysteps Lucas-Kanade + semi-Lagrangian extrapolation"
+  },
+  {
+   "time_utc": "2026-09-24T15:33:38Z",
+   "kind": "nowcast",
+   "lead_min": 40.8,
+   "png": "data/radar/nowcast_20260924T153338Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "method": "pysteps Lucas-Kanade + semi-Lagrangian extrapolation"
+  },
+  {
+   "time_utc": "2026-09-24T15:43:50Z",
+   "kind": "nowcast",
+   "lead_min": 51.0,
+   "png": "data/radar/nowcast_20260924T154350Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "method": "pysteps Lucas-Kanade + semi-Lagrangian extrapolation"
+  },
+  {
+   "time_utc": "2026-09-24T15:54:02Z",
+   "kind": "nowcast",
+   "lead_min": 61.2,
+   "png": "data/radar/nowcast_20260924T155402Z.png",
+   "bounds_latlon": [
+    [
+     16.64249,
+     70.43448
+    ],
+    [
+     21.15956,
+     75.18052
+    ]
+   ],
+   "method": "pysteps Lucas-Kanade + semi-Lagrangian extrapolation"
+  }
+ ],
+ "live_motion": {
+  "inputs_utc": [
+   "2026-09-24T14:32:22Z",
+   "2026-09-24T14:42:34Z",
+   "2026-09-24T14:52:50Z"
+  ],
+  "vectors_per_pair": [
+   {
+    "dt_min": 10.2,
+    "vectors": 3
+   },
+   {
+    "dt_min": 10.27,
+    "vectors": 3
+   }
+  ],
+  "median_speed_km_h": 75.1
+ },
+ "verification": {
+  "threshold_mm_h": 1.0,
+  "thresholds_mm_h": [
+   0.5,
+   1.0,
+   5.0
+  ],
+  "fss_window_km": 10,
+  "holdout": {
+   "inputs_utc": [
+    "2026-09-24T14:01:45Z",
+    "2026-09-24T14:11:57Z",
+    "2026-09-24T14:22:10Z"
+   ],
+   "vectors_per_pair": [
+    {
+     "dt_min": 10.2,
+     "vectors": 2
+    },
+    {
+     "dt_min": 10.22,
+     "vectors": 2
+    }
+   ],
+   "median_motion_km_h": 96.6,
+   "targets": [
+    {
+     "time_utc": "2026-09-24T14:32:22Z",
+     "lead_min": 10.2,
+     "obs_cells_ge_1": 123,
+     "methods": {
+      "extrapolation": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        128,
+        120
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        123,
+        96
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        85,
+        67
+       ],
+       "mae_all_mm_h": 0.0088,
+       "mae_wet_mm_h": 7.726,
+       "wet_cells": 219,
+       "fss_1_10km": 0.0
+      },
+      "sprog": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        128,
+        98
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        123,
+        78
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        85,
+        49
+       ],
+       "mae_all_mm_h": 0.008,
+       "mae_wet_mm_h": 7.656,
+       "wet_cells": 201,
+       "fss_1_10km": 0.0
+      },
+      "steps_mean": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        128,
+        322
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        123,
+        189
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        85,
+        24
+       ],
+       "mae_all_mm_h": 0.0076,
+       "mae_wet_mm_h": 4.365,
+       "wet_cells": 312,
+       "fss_1_10km": 0.001
+      },
+      "persistence": {
+       "csi_0.5": 0.081,
+       "hmf_0.5": [
+        18,
+        110,
+        95
+       ],
+       "csi_1": 0.088,
+       "hmf_1": [
+        17,
+        106,
+        70
+       ],
+       "csi_5": 0.048,
+       "hmf_5": [
+        7,
+        78,
+        62
+       ],
+       "mae_all_mm_h": 0.008,
+       "mae_wet_mm_h": 8.002,
+       "wet_cells": 193,
+       "fss_1_10km": 0.438
+      }
+     }
+    },
+    {
+     "time_utc": "2026-09-24T14:42:34Z",
+     "lead_min": 20.4,
+     "obs_cells_ge_1": 199,
+     "methods": {
+      "extrapolation": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        212,
+        126
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        199,
+        99
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        101,
+        66
+       ],
+       "mae_all_mm_h": 0.0095,
+       "mae_wet_mm_h": 6.109,
+       "wet_cells": 298,
+       "fss_1_10km": 0.0
+      },
+      "sprog": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        212,
+        96
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        199,
+        90
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        101,
+        60
+       ],
+       "mae_all_mm_h": 0.0089,
+       "mae_wet_mm_h": 5.992,
+       "wet_cells": 289,
+       "fss_1_10km": 0.0
+      },
+      "steps_mean": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        212,
+        287
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        199,
+        225
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        101,
+        43
+       ],
+       "mae_all_mm_h": 0.0089,
+       "mae_wet_mm_h": 3.919,
+       "wet_cells": 424,
+       "fss_1_10km": 0.0
+      },
+      "persistence": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        212,
+        113
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        199,
+        87
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        101,
+        69
+       ],
+       "mae_all_mm_h": 0.0095,
+       "mae_wet_mm_h": 6.382,
+       "wet_cells": 286,
+       "fss_1_10km": 0.128
+      }
+     }
+    },
+    {
+     "time_utc": "2026-09-24T14:52:50Z",
+     "lead_min": 30.7,
+     "obs_cells_ge_1": 80,
+     "methods": {
+      "extrapolation": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        134,
+        124
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        80,
+        94
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        35,
+        69
+       ],
+       "mae_all_mm_h": 0.0067,
+       "mae_wet_mm_h": 7.176,
+       "wet_cells": 174,
+       "fss_1_10km": 0.0
+      },
+      "sprog": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        134,
+        86
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        80,
+        80
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        35,
+        44
+       ],
+       "mae_all_mm_h": 0.0056,
+       "mae_wet_mm_h": 6.447,
+       "wet_cells": 160,
+       "fss_1_10km": 0.0
+      },
+      "steps_mean": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        134,
+        409
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        80,
+        244
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        35,
+        0
+       ],
+       "mae_all_mm_h": 0.0051,
+       "mae_wet_mm_h": 2.324,
+       "wet_cells": 324,
+       "fss_1_10km": 0.0
+      },
+      "persistence": {
+       "csi_0.5": 0.0,
+       "hmf_0.5": [
+        0,
+        134,
+        113
+       ],
+       "csi_1": 0.0,
+       "hmf_1": [
+        0,
+        80,
+        87
+       ],
+       "csi_5": 0.0,
+       "hmf_5": [
+        0,
+        35,
+        69
+       ],
+       "mae_all_mm_h": 0.0067,
+       "mae_wet_mm_h": 7.519,
+       "wet_cells": 167,
+       "fss_1_10km": 0.01
+      }
+     }
+    }
+   ],
+   "steps_probability": [
+    {
+     "time_utc": "2026-09-24T14:32:22Z",
+     "brier": 0.00075,
+     "max_prob": 0.917
+    },
+    {
+     "time_utc": "2026-09-24T14:42:34Z",
+     "brier": 0.00116,
+     "max_prob": 0.75
+    },
+    {
+     "time_utc": "2026-09-24T14:52:50Z",
+     "brier": 0.00046,
+     "max_prob": 0.333
+    }
+   ],
+   "errors": {}
+  },
+  "backtest": {
+   "origins": 14,
+   "by_lead": [
+    {
+     "frames_ahead": 1,
+     "cases": 14,
+     "lead_min_range": [
+      10.2,
+      20.5
+     ],
+     "obs_cells_ge_1_total": 2627,
+     "methods": {
+      "extrapolation": {
+       "csi_1_pooled": 0.277,
+       "hits": 1277,
+       "misses": 1350,
+       "false_alarms": 1984,
+       "mae_all_mm_h_mean": 0.0064,
+       "mae_wet_mm_h_pooled": 3.432,
+       "fss_1_10km_mean": 0.358
+      },
+      "sprog": {
+       "csi_1_pooled": 0.266,
+       "hits": 1187,
+       "misses": 1440,
+       "false_alarms": 1839,
+       "mae_all_mm_h_mean": 0.0062,
+       "mae_wet_mm_h_pooled": 3.502,
+       "fss_1_10km_mean": 0.306
+      },
+      "persistence": {
+       "csi_1_pooled": 0.167,
+       "hits": 836,
+       "misses": 1791,
+       "false_alarms": 2383,
+       "mae_all_mm_h_mean": 0.0078,
+       "mae_wet_mm_h_pooled": 3.98,
+       "fss_1_10km_mean": 0.33
+      }
+     }
+    },
+    {
+     "frames_ahead": 2,
+     "cases": 13,
+     "lead_min_range": [
+      20.4,
+      30.6
+     ],
+     "obs_cells_ge_1_total": 2019,
+     "methods": {
+      "extrapolation": {
+       "csi_1_pooled": 0.124,
+       "hits": 551,
+       "misses": 1468,
+       "false_alarms": 2437,
+       "mae_all_mm_h_mean": 0.0079,
+       "mae_wet_mm_h_pooled": 4.111,
+       "fss_1_10km_mean": 0.154
+      },
+      "sprog": {
+       "csi_1_pooled": 0.13,
+       "hits": 566,
+       "misses": 1453,
+       "false_alarms": 2340,
+       "mae_all_mm_h_mean": 0.0075,
+       "mae_wet_mm_h_pooled": 4.103,
+       "fss_1_10km_mean": 0.154
+      },
+      "persistence": {
+       "csi_1_pooled": 0.032,
+       "hits": 154,
+       "misses": 1865,
+       "false_alarms": 2866,
+       "mae_all_mm_h_mean": 0.0089,
+       "mae_wet_mm_h_pooled": 4.284,
+       "fss_1_10km_mean": 0.08
+      }
+     }
+    },
+    {
+     "frames_ahead": 3,
+     "cases": 12,
+     "lead_min_range": [
+      30.6,
+      40.8
+     ],
+     "obs_cells_ge_1_total": 1619,
+     "methods": {
+      "extrapolation": {
+       "csi_1_pooled": 0.062,
+       "hits": 262,
+       "misses": 1357,
+       "false_alarms": 2639,
+       "mae_all_mm_h_mean": 0.0083,
+       "mae_wet_mm_h_pooled": 4.208,
+       "fss_1_10km_mean": 0.084
+      },
+      "sprog": {
+       "csi_1_pooled": 0.052,
+       "hits": 221,
+       "misses": 1398,
+       "false_alarms": 2591,
+       "mae_all_mm_h_mean": 0.008,
+       "mae_wet_mm_h_pooled": 4.182,
+       "fss_1_10km_mean": 0.075
+      },
+      "persistence": {
+       "csi_1_pooled": 0.012,
+       "hits": 54,
+       "misses": 1565,
+       "false_alarms": 2843,
+       "mae_all_mm_h_mean": 0.0085,
+       "mae_wet_mm_h_pooled": 4.159,
+       "fss_1_10km_mean": 0.027
+      }
+     }
+    }
+   ]
+  },
+  "summary": [
+   "Most recent hold-out, +10 min: CSI at 1 mm/h is 0.0 for LK extrapolation and 0.088 for persistence. Motion there rests on 4 tracked vectors.",
+   "Rolling backtest over 14 origins, next scan: pooled CSI 0.277 for LK extrapolation, 0.266 for S-PROG, 0.167 for persistence."
+  ],
+  "definitions": {
+   "csi": "hits / (hits + misses + false alarms) over 1 km cells inside radar range",
+   "mae_all_mm_h": "mean absolute error in mm/h over every cell inside radar range, dry cells included",
+   "mae_wet_mm_h": "mean absolute error over cells where forecast or observation reaches 1 mm/h",
+   "fss": "fractions skill score at 1 mm/h in a 10 km window",
+   "persistence": "the last observed scan, unchanged"
+  }
+ },
+ "notes": [
+  "Radar images are IMD Doppler Weather Radar Mumbai MAX(Z) GIFs from mausam.imd.gov.in, archived every 5 minutes and decoded from the legend colours. The Chennai radar was offline on 2026-09-24, so the radar demo uses Mumbai.",
+  "Each pixel takes the midpoint of its 2.93 dBZ legend bin and is converted to rain rate with Marshall-Palmer Z = 200 R^1.6. IMD does not draw echoes below 20 dBZ (about 0.65 mm/h), so weaker rain reads as none.",
+  "Scan times come from the GIF comment, which carries the IST scan time printed in the image header.",
+  "Grid: 1 km cells on a radar-centred azimuthal equidistant plane, 250 km range, 0.9066 km per image pixel fitted from the labelled range rings.",
+  "Nowcast frames are pysteps Lucas-Kanade optical flow on the last 3 scans, extrapolated semi-Lagrangian at the median scan spacing of 10.2 minutes. Rain cells keep their intensity; growth and decay are not modelled.",
+  "Rain is light and scattered in this archive: at most 199 cells of 1 km2 reach 1 mm/h in a held-out scan. Treat the scores as indicative, not as a skill estimate.",
+  "The nowcast frames shown rest on 6 tracked motion vectors (median 75 km/h), so their direction and speed are uncertain.",
+  "The radar nowcast is not yet coupled to the flood model. Flood scenarios use a synthetic, spatially uniform storm.",
+  "Skipped 20260924T140003Z_0dc7ab3208f03835.gif: no echo anywhere in the 13:41:20Z scan, treated as missing."
+ ],
+ "built_utc": "2026-09-24T15:18:10Z",
+ "git_commit": "dfd2d7d"
+}

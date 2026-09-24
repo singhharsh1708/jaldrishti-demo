@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JalDrishti Method and Data</title>
+<meta name="description" content="Method, data sources, caveats and problem-statement mapping for the JalDrishti flood nowcast prototype.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 30 30%22%3E%3Crect x=%221%22 y=%221%22 width=%2228%22 height=%2228%22 rx=%228%22 fill=%22%2316243a%22/%3E%3Cpath d=%22M6 17c3-3 6 3 9 0s6 3 9 0%22 fill=%22none%22 stroke=%22%2386b6ef%22 stroke-width=%222.4%22/%3E%3Cpath d=%22M6 21.5c3-3 6 3 9 0s6 3 9 0%22 fill=%22none%22 stroke=%22%233987e5%22 stroke-width=%222.4%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="about.css">
+</head>
+<body class="doc-page">
+<header class="top">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+      <rect x="1" y="1" width="28" height="28" rx="8" fill="#16243a" stroke="#2c4a73"/>
+      <path d="M6 17c3-3 6 3 9 0s6 3 9 0" fill="none" stroke="#86b6ef" stroke-width="2" stroke-linecap="round"/>
+      <path d="M6 21.5c3-3 6 3 9 0s6 3 9 0" fill="none" stroke="#3987e5" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="15" cy="10" r="3" fill="none" stroke="#e9edf2" stroke-width="1.8"/>
+    </svg>
+    <div class="brand-text">
+      <h1>JalDrishti</h1>
+      <div class="sub">Street-level flood nowcast, Kodambakkam zone (West Mambalam, Ashok Nagar), Chennai (prototype)</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <a class="top-link" href="index.html">Open the prototype</a>
+</header>
+
+<main class="doc">
+  <section class="hero">
+    <p class="eyebrow">SIH26085 &middot; Urban Flood Nowcasting System &middot; MoES / NCMRWF</p>
+    <h2>Method, data and what to trust</h2>
+    <p class="big-lede">JalDrishti couples the Greater Chennai Corporation storm-water drain survey with the streets above it in one differentiable model. It forecasts water depth on every street segment every 10 minutes, ranks drains for desilting in a single adjoint pass, and works back from a few street-depth reports to find silted drains. This page explains how, and where the prototype stops.</p>
+    <div class="facts" id="facts"></div>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li>
+        <h3>Drain network from the GCC survey</h3>
+        <p>Each surveyed drain comes with its route, inverts, size and condition. Drains are split and snapped into a graph wherever they meet, within <span data-v="snap"></span> m. The prototype site covers wards <span data-v="wards"></span> (zones <span data-v="zones"></span>): <span data-v="junctions"></span> junctions and <span data-v="segments"></span> drain segments from <span data-v="drains"></span> surveyed drains. Drain junctions within <span data-v="outfall_m"></span> m of an OpenStreetMap waterway (canal, river, drain or stream) are outfalls (<span data-v="outfalls"></span> on the site).</p>
+      </li>
+      <li>
+        <h3>Street surface and flow</h3>
+        <p>Street level comes from the Copernicus GLO-30 DEM, anchored so that the median drain has <span data-v="cover"></span> m of cover. Each street is modelled as a 1D channel, <span data-v="street_w"></span> m wide, along its drain. It is not a 2D grid. With a 30 m DEM, the street surface has closed low points where water pools: <span data-v="pool_lows"></span> of <span data-v="pool_inner"></span> junctions sit lower than every neighbour, and all <span data-v="pool_deep"></span> junctions where street depth passes 1 m in any scenario lie in closed depressions. Treat depths over 1 m as model artifacts. Flow in drains and streets is local-inertial (Bates et al. 2010), with a Preissmann-style slot so drains can surcharge. Water crosses between street and drain through inlets as weir or orifice flow (Chen et al. 2007) in both directions, so a surcharged drain pushes water back onto the street. Silt raises a drain's bed and cuts its capacity. The model is written in JAX and is differentiable end to end.</p>
+      </li>
+      <li>
+        <h3>Storm scenarios</h3>
+        <p>Four synthetic storms of <span data-v="totals"></span> mm over <span data-v="duration"></span> minutes, bell-shaped in time with the peak at minute <span data-v="peak_at"></span>, and the same everywhere on the site. Peak rates: <span data-v="peaks"></span> mm/h. Time step <span data-v="dt"></span> s, depths saved every <span data-v="rec"></span> minutes. Each storm runs with clean drains, with the silted drains of the twin test, and with the silt inferred from gauges: <span data-v="n_scen"></span> runs in all. A segment's depth is the larger of its two end-junction street depths.</p>
+      </li>
+      <li>
+        <h3>Desilting priority from one adjoint pass</h3>
+        <p>Reverse-mode differentiation gives the gradient of street flood volume above 15 cm with respect to silt in every drain segment at once, in <span data-v="adj_s"></span> s for the <span data-v="prio_storm"></span> mm storm. Checked against <span data-v="bf_runs"></span> brute-force re-runs, one per segment (<span data-v="bf_s"></span> s): Spearman rank correlation <span data-v="spearman"></span>, and <span data-v="overlap"></span> of the top 20 segments agree. The ranking sums the linear estimate per surveyed drain; those per-drain sums were not re-checked by silting whole drains. Summing the single-segment brute-force effects per drain instead gives Spearman <span data-v="drain_sp"></span> and <span data-v="drain_ov"></span> of the top 20 drains in common, over all <span data-v="drains"></span> drains. The Desilting list shows both numbers for each drain, and they disagree sharply for some.</p>
+      </li>
+      <li>
+        <h3>Finding silted drains from street reports (twin test)</h3>
+        <p>In each run, silt is planted in <span data-v="twin_k"></span> drains of a "truth" model. Simulated gauges read street depth every 10 minutes with <span data-v="twin_noise"></span> cm noise, and the model estimates one silt value per candidate drain (<span data-v="twin_cand"></span> candidates, picked by a brute-force screen of the clean model; the planted drains are always drawn from these candidates). Over <span data-v="twin_runs"></span> runs each, the four highest estimates held <span data-v="twin_hits10"></span> of <span data-v="twin_silted"></span> planted drains with 10 gauges and <span data-v="twin_hits30"></span> of <span data-v="twin_silted"></span> with 30, against about <span data-v="twin_chance"></span> by random picking. Street-depth error at flooded junctions with no gauge in a different storm fell from <span data-v="twin_err10"></span> cm with 10 gauges and from <span data-v="twin_err30"></span> cm with 30 (mean absolute peak depth).</p>
+      </li>
+      <li>
+        <h3>Flood-safe routing</h3>
+        <p>Dijkstra over the <span data-v="segments"></span> drain-street segments runs in the browser. Speed on a flooded segment follows the depth-disruption curve of Pregnolato et al. (2017), v = 0.0009 w&sup2; &minus; 0.5529 w + 86.9448 km/h for depth w in mm, capped at <span data-v="cap"></span> km/h. Segments with <span data-v="closed"></span> cm of water or more are closed, and every metre of closed street carries a penalty: <span data-v="step"></span> m of it outweighs driving the whole network. The safe route therefore avoids closed streets whenever any open route exists, then takes the least time. When every route crosses a closed street, the page says so and shows the least flooded route instead: the deepest water on it is as shallow as possible, then it crosses the least length of closed street, then it takes the least time. That route is not safe, and it can cross more closed street than the shortest one. The Route API in <code>api/</code> applies the same rules over HTTP.</p>
+      </li>
+      <li>
+        <h3>Radar nowcast</h3>
+        <p>IMD Doppler Weather Radar images are decoded from their legend colours to reflectivity and rain rate (Marshall-Palmer Z = 200R<sup>1.6</sup>), then extrapolated with pysteps (Lucas-Kanade optical flow, semi-Lagrangian advection). Chennai's radar was offline on 2026-09-24, so the demo uses <span data-v="radar_city"></span>. In a rolling backtest over <span data-v="radar_origins"></span> forecast origins, pooled CSI at 1 mm/h for the next scan was <span data-v="radar_csi"></span>. On the most recent hold-out, <span data-v="radar_ho_text"></span> at +<span data-v="radar_ho_lead"></span> min, against <span data-v="radar_ho_pers"></span> for persistence. Rain in the archive was light and scattered, so these scores are indicative only.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>The four deliverables in the problem statement</h2>
+    <div class="table-wrap">
+      <table class="data deliver">
+        <thead><tr><th>Deliverable</th><th>Built in this prototype</th><th>Not yet</th><th>Next</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>1. Radar rainfall nowcast routed across a 2D DEM surface</b></td>
+            <td>Radar image decoder and pysteps nowcast with verification against held-out scans, on <span data-v="radar_city"></span> frames. Street level from the GLO-30 DEM.</td>
+            <td>The nowcast does not drive the flood model yet: flood runs use a synthetic uniform storm. The surface is 1D street channels, not a 2D grid.</td>
+            <td>Feed nowcast ensembles into the model. 2D local-inertial surface on a finer DEM. Chennai radar once it is back online.</td>
+          </tr>
+          <tr>
+            <td><b>2. Drainage network as a directed graph with capacity, blockage, overcapacity and backflow</b></td>
+            <td>GCC survey graph (<span data-v="junctions"></span> junctions, <span data-v="segments"></span> segments) with surveyed sizes, surcharge slot, two-way inlet exchange and silt as blockage. Adjoint ranking and twin inference of silt.</td>
+            <td>Hydraulic parameters uncalibrated. Outfalls are free (no canal or tide backwater). One site only.</td>
+            <td>Calibrate against the 2015 flood records and EPA SWMM. City-wide run on a GPU.</td>
+          </tr>
+          <tr>
+            <td><b>3. Web GIS dashboard with street-by-street depth in cm, 0 to 3 h</b></td>
+            <td>This site: depth on every segment every <span data-v="rec"></span> minutes from 0 to <span data-v="duration"></span> minutes, <span data-v="n_storms"></span> storms and <span data-v="n_states"></span> drain states, with desilting, twin and radar views.</td>
+            <td>Scenarios are precomputed, not live. One deterministic run per scenario, no exceedance probability.</td>
+            <td>Live runs driven by the radar nowcast. Ensemble exceedance maps.</td>
+          </tr>
+          <tr>
+            <td><b>4. API for flood-safe routes for navigation, emergency services and transit</b></td>
+            <td>Flood-safe routing in this page and a FastAPI Route API in <code>api/</code> with the same speed curve and closures.</td>
+            <td>The graph is the drain-street segments only, not the full road network. No traffic.</td>
+            <td>Map depths onto the OpenStreetMap drive network. Hand-off to navigation and emergency apps.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What to trust</h2>
+    <ul class="caveats big" id="caveats"></ul>
+  </section>
+
+  <section>
+    <h2>Data and references</h2>
+    <ul class="refs" id="sources"></ul>
+    <ul class="refs">
+      <li>Pregnolato, M., Ford, A., Wilkinson, S. M., Dawson, R. J. (2017). The impact of flooding on road transport: a depth-disruption function. <i>Transportation Research Part D</i>. <a href="https://doi.org/10.1016/j.trd.2017.06.020">doi:10.1016/j.trd.2017.06.020</a></li>
+      <li>Bates, P. D., Horritt, M. S., Fewtrell, T. J. (2010). A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. <i>Journal of Hydrology</i>. <a href="https://doi.org/10.1016/j.jhydrol.2010.03.027">doi:10.1016/j.jhydrol.2010.03.027</a></li>
+      <li>Pulkkinen, S., Nerini, D., P&eacute;rez Hortal, A. A., Velasco-Forero, C., et al. (2019). Pysteps: an open-source Python library for probabilistic precipitation nowcasting (v1.0). <i>Geoscientific Model Development</i>. <a href="https://doi.org/10.5194/gmd-12-4185-2019">doi:10.5194/gmd-12-4185-2019</a></li>
+      <li>Chen, A. S., Djordjevi&cacute;, S., Leandro, J., Savi&cacute;, D. A. (2007). The urban inundation model with bidirectional flow interaction between 2D overland surface and 1D sewer networks. <i>NOVATECH 2007</i>, Lyon, 465-472. <a href="https://ore.exeter.ac.uk/repository/handle/10871/16020">ore.exeter.ac.uk/repository/handle/10871/16020</a></li>
+      <li>Map: <a href="https://leafletjs.com/">Leaflet</a> 1.9.4. Basemaps: Esri World Dark Gray and Light Gray Canvas (Esri, HERE, Garmin, OpenStreetMap contributors).</li>
+    </ul>
+    <p class="note" id="id-note"></p>
+  </section>
+
+  <section>
+    <h2>Reproduce</h2>
+    <p>From the repository root: the export writes the flood scenarios, desilting priority and twin result to <code>site/data/</code>; the nowcast writes the radar frames and scores there; the bundle step packs <code>site/data/</code> into <code>site/data.js</code>. Then open <code>site/index.html</code> directly, or serve <code>site/</code> with a static server such as <code>npx http-server site -p 8000</code>. Python's built-in <code>http.server</code> can drop one of the page's parallel requests and leave a blank map.</p>
+    <pre class="code">PYTHONPATH=. .venv/bin/python -m jaldrishti.export_web
+PYTHONPATH=. .venv/bin/python -m jaldrishti.nowcast
+PYTHONPATH=. .venv/bin/python -m jaldrishti.web_bundle
+open site/index.html</pre>
+    <p class="note">By default the nowcast uses a fixed window of scans (<code>--until</code> in <code>jaldrishti/nowcast.py</code>), the window behind the published radar numbers. <code>--until latest</code> uses the whole archive and changes every radar number; re-check the Radar tab and the video after it.</p>
+    <p class="note">The page reads everything from <code>site/data.js</code>, so it works from disk and from any static host. Rebuild the bundle after re-running the export or the nowcast.</p>
+    <p class="note" id="build"></p>
+  </section>
+</main>
+<script src="data.js"></script>
+<script src="route.js"></script>
+<script src="about.js"></script>
+</body>
+</html>
