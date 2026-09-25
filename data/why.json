@@ -1,0 +1,121 @@
+{
+ "title": "Why Chennai floods street by street",
+ "checked": "2026-09-25",
+ "note": "Outside facts were read from the linked sources. JalDrishti numbers come from results/criticality.json, deck/facts.json and site/data/meta.json.",
+ "events": [
+  {
+   "event": "December 2015 floods",
+   "fact": "In the 24 h to 08:30 IST on 2 Dec 2015, Chennai stations averaged 286 mm of rain and peaked at 494 mm.",
+   "source_url": "https://www.worldweatherattribution.org/chennai-floods-december-2015/"
+  },
+  {
+   "event": "December 2015 toll",
+   "fact": "The 2015 floods took 289 lives and inundated 23.25 lakh houses.",
+   "source_url": "https://cag.gov.in/uploads/download_audit_report/2017/Report_No_4_of_2017_-_Performance_Audit_of_Flood_Management_and_Response_in_Chennai_and_its_Suburban_Area.pdf"
+  },
+  {
+   "event": "Cyclone Michaung, December 2023",
+   "fact": "Nungambakkam logged 230.2 mm and then 238.3 mm in the two 24 h periods ending 08:30 IST on 4 and 5 Dec 2023.",
+   "source_url": "https://mausam.imd.gov.in/chennai/mcdata/ne_monsoon_2023.pdf"
+  },
+  {
+   "event": "Our prototype zone in 2023",
+   "fact": "Zone 10 Kodambakkam, where the prototype site lies, logged 22 cm and then 21 cm in those two days.",
+   "source_url": "https://mausam.imd.gov.in/chennai/mcdata/ne_monsoon_2023.pdf"
+  }
+ ],
+ "causes": [
+  {
+   "cause": "Short, intense monsoon bursts",
+   "fact": "During Cyclone Michaung, Chennai gauges logged 1 to 3 cm of rain an hour for about a day, with spells of 3 to 5 cm.",
+   "source_url": "https://mausam.imd.gov.in/chennai/mcdata/ne_monsoon_2023.pdf",
+   "jaldrishti_answer": "The model runs a 3 h storm on the site in 0.54 s, fast enough to follow radar. The radar demo uses Mumbai frames and does not drive the flood model yet."
+  },
+  {
+   "cause": "Drains too small and too few",
+   "fact": "Auditors found GCC sized 345 km of new drains for 31.39 mm/h when studies advised about 49 mm/h, and drains lined only 26% of road length.",
+   "source_url": "https://cag.gov.in/uploads/download_audit_report/2017/Report_No_4_of_2017_-_Performance_Audit_of_Flood_Management_and_Response_in_Chennai_and_its_Suburban_Area.pdf",
+   "jaldrishti_answer": "Each modelled drain keeps its surveyed size and inverts, so capacity is tested against storms peaking at 38.6 to 96.5 mm/h, not assumed. Streets without a surveyed drain are left out."
+  },
+  {
+   "cause": "Flat, low land",
+   "fact": "GCC puts the city's average land level at 2.0 m above sea level and blames flat terrain and tides for waterlogging.",
+   "source_url": "https://chennaicorporation.gov.in/gcc/department/storm-water/",
+   "jaldrishti_answer": "Local-inertial flow follows the water surface, not the drain bed, so water backs up, reverses and spills onto streets. Street levels come from a coarse 30 m DEM."
+  },
+  {
+   "cause": "Outfalls held back by rivers and sand bars",
+   "fact": "Auditors found the unopened Adyar river mouth stopped flood water reaching the sea in 2015.",
+   "source_url": "https://cag.gov.in/uploads/download_audit_report/2017/Report_No_4_of_2017_-_Performance_Audit_of_Flood_Management_and_Response_in_Chennai_and_its_Suburban_Area.pdf",
+   "jaldrishti_answer": "Outfalls are explicit nodes, 7 on the site, but they drain freely today. Setting their level from C-FLOWS river and tide forecasts is the next step, not yet built."
+  },
+  {
+   "cause": "Silted drains, cleaned late",
+   "fact": "In Kodambakkam zone, home of our site, drains on 163 of 614 streets went uncleaned from 2013 to 2016.",
+   "source_url": "https://cag.gov.in/uploads/download_audit_report/2017/Report_No_4_of_2017_-_Performance_Audit_of_Flood_Management_and_Response_in_Chennai_and_its_Suburban_Area.pdf",
+   "jaldrishti_answer": "One adjoint pass ranks all 505 drain segments by the flooding their silt adds, in 1.74 s against 283.5 s for 505 brute-force runs, with 17 of the top 20 shared. In the twin test (silt planted in the model), street reports put 10 of 20 silted drains in the top 4, against about 5 by chance."
+  },
+  {
+   "cause": "Warnings do not see the drains",
+   "fact": "C-FLOWS runs on NCMRWF and IMD weather-model forecasts and a library of about 796 precomputed flood scenarios.",
+   "source_url": "https://www.nccr.gov.in/sites/default/files/clChen.pdf",
+   "jaldrishti_answer": "The C-FLOWS documents we read list no input for drain condition. JalDrishti models every surveyed drain and can update its silt from street reports, so far shown only in the twin test. It is built to sit beside C-FLOWS, not replace it."
+  },
+  {
+   "cause": "Rain forecasts are not water forecasts",
+   "fact": "IMD nowcasts run up to 6 hours ahead for all districts and about 1,200 stations.",
+   "source_url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2238023",
+   "jaldrishti_answer": "Rain becomes water depth on each of 505 street segments every 10 minutes for 3 hours, plus flood-safe routes through an API. In the 80 mm synthetic storm at minute 50, the shortest route crosses 3 closed segments and the safe route none, for 321 m extra."
+  }
+ ],
+ "limits": [
+  "River floods from reservoir releases: Chembarambakkam released 29,000 cusec into the Adyar for 21 hours on 1 and 2 Dec 2015. JalDrishti has no river model; C-FLOWS covers the rivers.",
+  "Canal and tide backwater is not modelled: outfalls drain freely. Site flooding in 2015 also had canal and river backwater, so we claim a pattern match, not a depth replay.",
+  "Encroachment and lost lakes are planning problems that JalDrishti does not address.",
+  "Streets are 1D channels along surveyed drains, not a 2D grid. Streets without a surveyed drain are left out.",
+  "Storms are synthetic or ERA5-shaped. Silted drain states come from a twin test with silt planted in the model, not field checks.",
+  "The radar demo uses Mumbai frames and does not drive the flood model."
+ ],
+ "sources": [
+  {
+   "name": "CAG Report No. 4 of 2017, Flood management and response in Chennai and its suburban areas",
+   "url": "https://cag.gov.in/uploads/download_audit_report/2017/Report_No_4_of_2017_-_Performance_Audit_of_Flood_Management_and_Response_in_Chennai_and_its_Suburban_Area.pdf"
+  },
+  {
+   "name": "IMD Regional Meteorological Centre Chennai, Report on Northeast Monsoon 2023",
+   "url": "https://mausam.imd.gov.in/chennai/mcdata/ne_monsoon_2023.pdf"
+  },
+  {
+   "name": "World Weather Attribution, Chennai floods December 2015 (van Oldenborgh et al., BAMS 2016)",
+   "url": "https://www.worldweatherattribution.org/chennai-floods-december-2015/"
+  },
+  {
+   "name": "Narasimhan et al., Chennai Floods 2015: A Rapid Assessment, IISc and IIT Madras, 2016",
+   "url": "https://www.cag.org.in/sites/default/files/database/chennai-floods-rapid-assessment-report_1.pdf"
+  },
+  {
+   "name": "Greater Chennai Corporation, Storm Water Drain department",
+   "url": "https://chennaicorporation.gov.in/gcc/department/storm-water/"
+  },
+  {
+   "name": "Prasad, Rao and Bhat, Chennai City Storm Water Drainage Plan, ICWMM 2012",
+   "url": "https://www.icwmm.org/Archive/2012-C021-32/chennai-city-storm-water-drainage-plan-ndash-a-pathway-for-adoption-of-innovative-software-technique"
+  },
+  {
+   "name": "NCCR (MoES), Chennai Flood Warning System",
+   "url": "https://www.nccr.gov.in/sites/default/files/clChen.pdf"
+  },
+  {
+   "name": "NCCR (MoES), C-FLOWS brochure",
+   "url": "https://www.nccr.gov.in/sites/default/files/C-FLOWS%20Brochure.pdf"
+  },
+  {
+   "name": "PIB, Major improvements in weather forecasting, Lok Sabha answer, 11 March 2026",
+   "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2238023"
+  },
+  {
+   "name": "GCC storm-water drain survey via OpenCity",
+   "url": "https://data.opencity.in/dataset/chennai-stormwater-drain-swd-maps"
+  }
+ ]
+}

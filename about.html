@@ -66,8 +66,38 @@
         <p>Dijkstra over the <span data-v="segments"></span> drain-street segments runs in the browser. Speed on a flooded segment follows the depth-disruption curve of Pregnolato et al. (2017), v = 0.0009 w&sup2; &minus; 0.5529 w + 86.9448 km/h for depth w in mm, capped at <span data-v="cap"></span> km/h. Segments with <span data-v="closed"></span> cm of water or more are closed, and every metre of closed street carries a penalty: <span data-v="step"></span> m of it outweighs driving the whole network. The safe route therefore avoids closed streets whenever any open route exists, then takes the least time. When every route crosses a closed street, the page says so and shows the least flooded route instead: the deepest water on it is as shallow as possible, then it crosses the least length of closed street, then it takes the least time. That route is not safe, and it can cross more closed street than the shortest one. The Route API in <code>api/</code> applies the same rules over HTTP.</p>
       </li>
       <li>
+        <h3>Chance of flooding</h3>
+        <p id="m-ensemble"></p>
+      </li>
+      <li>
+        <h3>Report water here</h3>
+        <p id="m-report"></p>
+      </li>
+      <li>
+        <h3>Whole city in one run</h3>
+        <p id="m-city"></p>
+      </li>
+      <li>
         <h3>Radar nowcast</h3>
         <p>IMD Doppler Weather Radar images are decoded from their legend colours to reflectivity and rain rate (Marshall-Palmer Z = 200R<sup>1.6</sup>), then extrapolated with pysteps (Lucas-Kanade optical flow, semi-Lagrangian advection). Chennai's radar was offline on 2026-09-24, so the demo uses <span data-v="radar_city"></span>. In a rolling backtest over <span data-v="radar_origins"></span> forecast origins, pooled CSI at 1 mm/h for the next scan was <span data-v="radar_csi"></span>. On the most recent hold-out, <span data-v="radar_ho_text"></span> at +<span data-v="radar_ho_lead"></span> min, against <span data-v="radar_ho_pers"></span> for persistence. Rain in the archive was light and scattered, so these scores are indicative only.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Checks against 2015 floods and EPA SWMM</h2>
+    <ol class="steps">
+      <li>
+        <h3>2015 flood records</h3>
+        <p id="m-evidence"></p>
+      </li>
+      <li>
+        <h3>Calibration with a spatial hold-out</h3>
+        <p id="m-calib"></p>
+      </li>
+      <li>
+        <h3>Code-to-code check against EPA SWMM</h3>
+        <p id="m-swmm"></p>
       </li>
     </ol>
   </section>
@@ -87,14 +117,14 @@
           <tr>
             <td><b>2. Drainage network as a directed graph with capacity, blockage, overcapacity and backflow</b></td>
             <td>GCC survey graph (<span data-v="junctions"></span> junctions, <span data-v="segments"></span> segments) with surveyed sizes, surcharge slot, two-way inlet exchange and silt as blockage. Adjoint ranking and twin inference of silt.</td>
-            <td>Hydraulic parameters uncalibrated. Outfalls are free (no canal or tide backwater). One site only.</td>
-            <td>Calibrate against the 2015 flood records and EPA SWMM. City-wide run on a GPU.</td>
+            <td>Calibration against 2015 flood records did not beat the default parameters, and the default model does not beat chance on those records. Outfalls are free (no canal or tide backwater).</td>
+            <td>Finer DEM, since the modelled wet spots follow 30 m DEM hollows. Fix junction storage below drain floors found by the SWMM check. Outfall levels from river and tide forecasts.</td>
           </tr>
           <tr>
             <td><b>3. Web GIS dashboard with street-by-street depth in cm, 0 to 3 h</b></td>
-            <td>This site: depth on every segment every <span data-v="rec"></span> minutes from 0 to <span data-v="duration"></span> minutes, <span data-v="n_storms"></span> storms and <span data-v="n_states"></span> drain states, with desilting, twin and radar views.</td>
-            <td>Scenarios are precomputed, not live. One deterministic run per scenario, no exceedance probability.</td>
-            <td>Live runs driven by the radar nowcast. Ensemble exceedance maps.</td>
+            <td>This site: depth on every segment every <span data-v="rec"></span> minutes from 0 to <span data-v="duration"></span> minutes, <span data-v="n_storms"></span> storms and <span data-v="n_states"></span> drain states, chance of passing 15 and 30 cm from a storm ensemble, street reports, a whole-city run, and desilting, twin and radar views.</td>
+            <td>Scenarios are precomputed, not live. The ensemble varies only storm total and timing, not the rain pattern.</td>
+            <td>Live runs driven by radar nowcast ensembles.</td>
           </tr>
           <tr>
             <td><b>4. API for flood-safe routes for navigation, emergency services and transit</b></td>
@@ -115,6 +145,8 @@
   <section>
     <h2>Data and references</h2>
     <ul class="refs" id="sources"></ul>
+    <h3 class="refs-head">Why Chennai floods: sources for the first tab</h3>
+    <ul class="refs" id="why-sources"></ul>
     <ul class="refs">
       <li>Pregnolato, M., Ford, A., Wilkinson, S. M., Dawson, R. J. (2017). The impact of flooding on road transport: a depth-disruption function. <i>Transportation Research Part D</i>. <a href="https://doi.org/10.1016/j.trd.2017.06.020">doi:10.1016/j.trd.2017.06.020</a></li>
       <li>Bates, P. D., Horritt, M. S., Fewtrell, T. J. (2010). A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. <i>Journal of Hydrology</i>. <a href="https://doi.org/10.1016/j.jhydrol.2010.03.027">doi:10.1016/j.jhydrol.2010.03.027</a></li>
@@ -130,6 +162,14 @@
     <p>From the repository root: the export writes the flood scenarios, desilting priority and twin result to <code>site/data/</code>; the nowcast writes the radar frames and scores there; the bundle step packs <code>site/data/</code> into <code>site/data.js</code>. Then open <code>site/index.html</code> directly, or serve <code>site/</code> with a static server such as <code>npx http-server site -p 8000</code>. Python's built-in <code>http.server</code> can drop one of the page's parallel requests and leave a blank map.</p>
     <pre class="code">PYTHONPATH=. .venv/bin/python -m jaldrishti.export_web
 PYTHONPATH=. .venv/bin/python -m jaldrishti.nowcast
+PYTHONPATH=. .venv/bin/python -m jaldrishti.evidence
+PYTHONPATH=. .venv/bin/python -m jaldrishti.rain2015
+PYTHONPATH=. .venv/bin/python -m jaldrishti.validate
+PYTHONPATH=. .venv/bin/python -m jaldrishti.calibrate
+PYTHONPATH=. .venv/bin/python -m jaldrishti.swmm_check
+PYTHONPATH=. .venv/bin/python -m jaldrishti.ensemble
+PYTHONPATH=. .venv/bin/python -m jaldrishti.report_kernel
+PYTHONPATH=. .venv/bin/python -m jaldrishti.citywide
 PYTHONPATH=. .venv/bin/python -m jaldrishti.web_bundle
 open site/index.html</pre>
     <p class="note">By default the nowcast uses a fixed window of scans (<code>--until</code> in <code>jaldrishti/nowcast.py</code>), the window behind the published radar numbers. <code>--until latest</code> uses the whole archive and changes every radar number; re-check the Radar tab and the video after it.</p>

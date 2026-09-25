@@ -2,7 +2,9 @@ const D = window.JD_DATA;
 const NET = D.network;
 const SC = D.scenarios;
 const ADJ = JDRoute.buildGraph(NET);
-const PANELS = ["flood", "route", "priority", "twin", "radar"];
+const PANELS = ["why", "flood", "route", "priority", "twin", "report", "evidence", "city", "radar"];
+const VIEWS = ["depth", "p15", "p30"];
+const EN = D.ensemble;
 const DOCKED = ["flood", "route"];
 const STATE_LABEL = { clean: "Clean", silted: "Silted (twin)", inferred: "Inferred" };
 const STATE_LONG = { clean: "clean drains", silted: "silted drains, twin truth", inferred: "drains inferred from gauges" };
@@ -20,7 +22,7 @@ const SAFE_COLOR = "#22c55e";
 const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/";
 const TILE_ATTR = "Tiles: Esri, HERE, Garmin, OpenStreetMap contributors";
 
-const S = { frame: 0, storm: 60, state: "clean", panel: "flood", from: null, to: null, playing: null, hovered: null, route: null };
+const S = { frame: 0, storm: 60, state: "clean", view: "depth", panel: "flood", from: null, to: null, playing: null, hovered: null, route: null, reports: [] };
 
 function binOf(d) {
   return d >= 50 ? 4 : d >= 30 ? 3 : d > 15 ? 2 : d > 5 ? 1 : 0;
@@ -36,6 +38,30 @@ function depthsAt(storm, state, frame) {
 
 function depths() {
   return depthsAt(S.storm, S.state, S.frame);
+}
+
+function chanceOn() {
+  return S.view !== "depth" && !!EN && S.state === "clean";
+}
+
+function viewThr() {
+  return S.view === "p30" ? 30 : 15;
+}
+
+function probAt(storm, thr, frame) {
+  const key = `${storm}|${thr}`;
+  return EN && EN.prob_pct[key] ? EN.prob_pct[key][frame] : null;
+}
+
+function parseReports(v) {
+  if (!v) return [];
+  const out = [];
+  v.split(/[,_]/).forEach(pair => {
+    const [n, cm] = pair.split(/[:-]/);
+    const node = validNode(n);
+    if (node !== null && !isNaN(+cm) && cm !== "" && !out.some(r => r.node === node)) out.push({ node, cm: Math.max(0, Math.min(200, Math.round(+cm))) });
+  });
+  return out;
 }
 
 function stormInfo(mm) {
@@ -83,6 +109,9 @@ function readParams() {
   S.frame = t !== null && t !== "" && !isNaN(+t) ? nearestFrame(+t) : peakFrame(S.storm, S.state);
   S.from = validNode(p.get("from"));
   S.to = validNode(p.get("to"));
+  S.view = VIEWS.includes(p.get("view")) && EN ? p.get("view") : "depth";
+  if (S.view !== "depth") S.state = "clean";
+  S.reports = parseReports(p.get("rep"));
   S.radarFrame = p.has("frame") && !isNaN(+p.get("frame")) ? Math.round(+p.get("frame")) : null;
 }
 
@@ -94,6 +123,8 @@ function writeParams() {
     p.set("storm", S.storm);
     p.set("state", S.state);
   }
+  if (S.panel === "flood" && chanceOn()) p.set("view", S.view);
+  if (S.panel === "report" && S.reports.length) p.set("rep", S.reports.map(r => `${r.node}-${r.cm}`).join("_"));
   if (S.panel === "route") {
     if (S.from !== null) p.set("from", S.from);
     if (S.to !== null) p.set("to", S.to);
@@ -145,6 +176,7 @@ function makePane(m, name, z, events) {
 const map = L.map("map", { zoomControl: false, minZoom: 12, maxZoom: 19, zoomSnap: 0.25, zoomDelta: 0.5 });
 L.control.zoom({ position: "topleft" }).addTo(map);
 addBaseTiles(map);
+const R_UNDER = makePane(map, "under", 405, false);
 const R_EDGE = makePane(map, "edges", 410, false);
 const R_OVER = makePane(map, "over", 420, false);
 const R_ROUTE = makePane(map, "routes", 430, false);
@@ -162,18 +194,23 @@ const hitLines = NET.edges.map(e => {
 const routeLayer = L.layerGroup().addTo(map);
 const networkBounds = L.latLngBounds(NET.bounds);
 
-const view = { userMoved: false };
+const view = { userMoved: false, mode: null };
 ["dragstart"].forEach(ev => map.on(ev, () => { view.userMoved = true; }));
 ["wheel", "dblclick", "touchstart"].forEach(ev => map.getContainer().addEventListener(ev, () => { view.userMoved = true; }, { passive: true }));
 document.querySelectorAll("#map .leaflet-control-zoom a").forEach(a => a.addEventListener("click", () => { view.userMoved = true; }));
 window.addEventListener("resize", () => {
   if (view.userMoved) return;
   if (S.panel === "radar") refitRadar();
+  else if (S.panel === "city") fitNetwork();
   else if (S.panel === "route" && S.route) fitRoute();
   else fitNetwork();
 });
 
 function fitNetwork() {
+  if (S.panel === "city" && CITY.bounds) {
+    map.fitBounds(CITY.bounds, { padding: [20, 20] });
+    return;
+  }
   const docked = DOCKED.includes(S.panel) && window.innerWidth > 820;
   map.fitBounds(networkBounds, { paddingTopLeft: [30, 30], paddingBottomRight: [docked ? 30 : 30, docked ? 190 : 30] });
 }
@@ -181,7 +218,14 @@ function fitNetwork() {
 function edgeTip(e) {
   const flood = DOCKED.includes(S.panel);
   const d = depths()[e.id];
-  const depthRow = flood ? `<div class="tt-row"><span>Water depth</span><b>${d.toFixed(1)} cm</b></div>` : "";
+  let depthRow = flood ? `<div class="tt-row"><span>Water depth</span><b>${d.toFixed(1)} cm</b></div>` : "";
+  if (S.panel === "flood" && chanceOn()) {
+    depthRow = `<div class="tt-row"><span>Nominal depth</span><b>${d.toFixed(1)} cm</b></div>` +
+      `<div class="tt-row"><span>Chance over 15 cm</span><b>${probAt(S.storm, 15, S.frame)[e.id]}%</b></div>` +
+      `<div class="tt-row"><span>Chance over 30 cm</span><b>${probAt(S.storm, 30, S.frame)[e.id]}%</b></div>`;
+  }
+  if (S.panel === "report") depthRow = reportTipRows(e);
+  if (S.panel === "evidence") depthRow = evidenceTipRows(e);
   const when = flood ? `T+${SC.minutes[S.frame]} min, ${S.storm} mm storm, ${STATE_LONG[S.state]}. ` : "";
   return `<div class="tt-street">${esc(e.street)}</div>` + depthRow +
     `<div class="tt-row"><span>GCC survey OBJECTID</span><b>${e.survey_objectid}</b></div>` +
@@ -190,20 +234,27 @@ function edgeTip(e) {
     `<div class="tt-sub">${when}Survey condition: ${esc(e.status)}. Segment ${e.id}, ${Math.round(e.length_m)} m.</div>`;
 }
 
+function edgeValues() {
+  if (S.panel === "flood" && chanceOn()) return { v: probAt(S.storm, viewThr(), S.frame), bins: PROB_BINS, bin: probBin, front: 1 };
+  if (S.panel === "report" && RP.after) return { v: RP.after, bins: BINS, bin: binOf, front: 2 };
+  if (S.panel === "evidence" && D.evidence) return { v: NET.edges.map(e => evEdge[e.id].peak), bins: BINS, bin: binOf, front: 2 };
+  if (DOCKED.includes(S.panel)) return { v: depths(), bins: BINS, bin: binOf, front: 2 };
+  return null;
+}
+
 function paintEdges() {
-  const dim = !DOCKED.includes(S.panel);
-  const d = depths();
+  const ev = edgeValues();
   const deep = [];
   NET.edges.forEach((e, i) => {
-    if (dim) {
+    if (!ev) {
       edgeLines[i].setStyle(DIM);
       return;
     }
-    const b = binOf(d[i]);
-    edgeLines[i].setStyle({ color: BINS[b].color, weight: BINS[b].weight, opacity: BINS[b].opacity });
-    if (b >= 2) deep.push(i);
+    const b = ev.bin(ev.v[i]);
+    edgeLines[i].setStyle({ color: ev.bins[b].color, weight: ev.bins[b].weight, opacity: ev.bins[b].opacity });
+    if (b >= ev.front) deep.push(i);
   });
-  deep.sort((a, b) => d[a] - d[b]).forEach(i => edgeLines[i].bringToFront());
+  if (ev) deep.sort((a, b) => ev.v[a] - ev.v[b]).forEach(i => edgeLines[i].bringToFront());
 }
 
 function setText(id, text) {
@@ -223,6 +274,7 @@ function renderFloodPanel() {
   setText("kmax-street", d[imax] > 0 ? NET.edges[imax].street : "no water yet");
   const rain = stormInfo(S.storm).rain_mm_h_10min[S.frame];
   document.getElementById("krain").innerHTML = `${rain.toFixed(1)}<small>mm/h</small>`;
+  renderChanceBlock();
   const note = document.getElementById("state-note");
   note.className = "callout " + (S.state === "clean" ? "info" : "twin");
   note.innerHTML = `<b>${STATE_LABEL[S.state]}.</b> ${esc(SC.state_notes[S.state])}`;
@@ -237,6 +289,32 @@ function renderFloodPanel() {
   });
 }
 
+function renderChanceBlock() {
+  const box = document.getElementById("chance-block");
+  if (!EN) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  const sm = EN.summary.find(x => x.mm === S.storm);
+  const k = document.getElementById("chance-kpis");
+  if (chanceOn()) {
+    const thr = viewThr();
+    const p = probAt(S.storm, thr, S.frame);
+    const any = EN.prob_any_pct[`${S.storm}|${thr}`];
+    k.innerHTML = kpiHtml(`Chance 50% or more, now`, p.filter(x => x >= 50).length, `segments over ${thr} cm at T+${SC.minutes[S.frame]} min`) +
+      kpiHtml("Chance 50% or more, any time", any.filter(x => x >= 50).length, `segments over ${thr} cm in the 3 h`);
+    k.hidden = false;
+  } else {
+    k.hidden = true;
+  }
+  document.getElementById("chance-note").innerHTML =
+    `${EN.members} storms per size: total times a lognormal factor (sigma ${EN.sigma_log} in log), peak moved up to ${EN.peak_jitter_min} min either way, seed ${EN.seed}. ` +
+    `At ${S.storm} mm, ${sm.edges_over_15cm_nominal} segments pass 15 cm in the single run; ${sm.edges_p15_any_ge_50} have a 50% or higher chance and ${sm.edges_p15_any_ge_10} a 10% or higher chance at some time. ` +
+    `Clean drains only. A synthetic ensemble standing in for radar nowcast ensembles.` +
+    (S.view !== "depth" && S.state !== "clean" ? " Switch drains to Clean to see it." : "");
+}
+
 function renderDock() {
   document.getElementById("t").value = S.frame;
   setText("tlabel", `T+${SC.minutes[S.frame]} min`);
@@ -244,6 +322,8 @@ function renderDock() {
   setText("tsub", `${S.storm} mm storm, rain ${st.rain_mm_h_10min[S.frame].toFixed(1)} mm/h`);
   document.querySelectorAll("#storm-seg button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === S.storm)));
   document.querySelectorAll("#state-seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === S.state)));
+  document.querySelectorAll("#view-seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (chanceOn() ? S.view : "depth"))));
+  document.getElementById("view-group").hidden = !EN || S.panel !== "flood";
   document.getElementById("play").innerHTML = S.playing ? ICON_PAUSE : ICON_PLAY;
 }
 
@@ -258,7 +338,11 @@ function buildDock() {
   document.getElementById("storm-seg").innerHTML = SC.storms.map(s => `<button data-v="${s.mm}" title="Peak ${s.peak_mm_h} mm/h at minute ${s.peak_at_min}">${s.mm} mm</button>`).join("");
   document.getElementById("state-seg").innerHTML = SC.states.map(s => `<button data-v="${s}">${STATE_LABEL[s]}</button>`).join("");
   document.querySelectorAll("#storm-seg button").forEach(b => b.addEventListener("click", () => { S.storm = +b.dataset.v; render(); }));
-  document.querySelectorAll("#state-seg button").forEach(b => b.addEventListener("click", () => { S.state = b.dataset.v; render(); }));
+  document.querySelectorAll("#state-seg button").forEach(b => b.addEventListener("click", () => { S.state = b.dataset.v; if (S.state !== "clean") S.view = "depth"; render(); }));
+  if (EN) {
+    document.getElementById("view-seg").innerHTML = VIEWS.map(v => `<button data-v="${v}">${v === "depth" ? "Depth" : `Chance &gt;${v.slice(1)} cm`}</button>`).join("");
+    document.querySelectorAll("#view-seg button").forEach(b => b.addEventListener("click", () => { S.view = b.dataset.v; if (S.view !== "depth") S.state = "clean"; render(); }));
+  }
   document.getElementById("play").addEventListener("click", () => (S.playing ? stop() : play()));
 }
 
@@ -360,6 +444,15 @@ function buildRoutePanel() {
   document.getElementById("r-swap").addEventListener("click", () => { [S.from, S.to] = [S.to, S.from]; render(); });
   document.getElementById("r-clear").addEventListener("click", () => { S.from = null; S.to = null; view.userMoved = false; render(); fitNetwork(); });
   map.on("click", ev => {
+    if (S.panel === "report") {
+      reportClick(S, nearestNode(ev.latlng));
+      render();
+      return;
+    }
+    if (S.panel === "city") {
+      cityClick(ev.latlng);
+      return;
+    }
     if (S.panel !== "route") return;
     const n = nearestNode(ev.latlng);
     if (S.from === null || S.to !== null) {
@@ -376,6 +469,11 @@ function legendHtml() {
   if (S.panel === "priority") return priorityLegend();
   if (S.panel === "twin") return twinLegend();
   if (S.panel === "radar") return typeof radarLegend === "function" ? radarLegend() : "";
+  if (S.panel === "report") return reportLegend(BINS);
+  if (S.panel === "evidence") return evidenceLegend(BINS);
+  if (S.panel === "city") return cityLegend(BINS);
+  if (S.panel === "why") return '<div class="title">Prototype site</div><div class="row"><span class="ln" style="background:#5f6a7b;height:2px"></span>' + NET.edges.length + " street segments over surveyed GCC drains</div>";
+  if (S.panel === "flood" && chanceOn()) return chanceLegend(viewThr());
   let html = '<div class="title">Water depth on street</div>' +
     BINS.slice().reverse().map(b => `<div class="row"><span class="ln" style="background:${b.color};height:${Math.max(2, b.weight)}px"></span>${b.label}</div>`).join("");
   if (S.panel === "route") {
@@ -401,17 +499,33 @@ function setPanel(p) {
   document.getElementById("dock").hidden = !DOCKED.includes(p);
   document.getElementById("radar-dock").hidden = !radar;
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", String(b.dataset.panel === p)));
+  const at = document.querySelector('.tab[aria-selected="true"]');
+  if (at) at.scrollIntoView({ inline: "center", block: "nearest" });
   document.querySelectorAll(".panel").forEach(s => { s.hidden = s.dataset.panel !== p; });
+  document.body.dataset.panel = p;
   if (radar) {
     showRadar();
-  } else if (was === "radar") {
+  } else if (was === "radar" || was === "why") {
     map.invalidateSize();
+    if (was === "why" && !view.userMoved) fitNetwork();
   }
   showPriority(p === "priority");
   showTwin(p === "twin");
+  showReport(p === "report");
+  showEvidence(p === "evidence");
+  showCity(p === "city");
+  ["under", "edges", "over", "routes", "hit"].forEach(name => { map.getPane(name).style.display = p === "city" ? "none" : ""; });
+  const mode = p === "city" ? "city" : "site";
+  if (!radar) map.setMinZoom(mode === "city" ? 10 : 12);
+  if (!radar && view.mode && view.mode !== mode) {
+    view.userMoved = false;
+    fitNetwork();
+  }
+  if (!radar) view.mode = mode;
 }
 
 function render() {
+  if (S.panel === "report" && D.report) renderReportPanel(S, NET);
   paintEdges();
   renderDock();
   if (S.panel === "flood") renderFloodPanel();
@@ -481,6 +595,11 @@ function init() {
   buildRoutePanel();
   buildPriorityPanel(map, R_OVER, fitEdges);
   buildTwinPanel(map, R_OVER, fitEdges);
+  const ctx = { map, NET, S, under: R_UNDER, over: R_OVER, bins: BINS, binOf, fitEdges, onChange: render };
+  buildWhyPanel();
+  buildReportPanel(ctx);
+  buildEvidencePanel(ctx);
+  buildCityPanel(ctx);
   safeRadarPanel();
   document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => { setPanel(b.dataset.panel); render(); }));
   document.addEventListener("keydown", ev => {
@@ -492,6 +611,7 @@ function init() {
   const panel = S.panel;
   S.panel = "flood";
   fitNetwork();
+  view.mode = "site";
   setPanel(panel);
   render();
   if (S.panel === "route") fitRoute();

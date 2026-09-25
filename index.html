@@ -34,14 +34,32 @@
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" data-panel="why">Why Chennai floods</button>
     <button class="tab" role="tab" data-panel="flood">Flood map</button>
     <button class="tab" role="tab" data-panel="route">Safe route</button>
     <button class="tab" role="tab" data-panel="priority">Desilting</button>
     <button class="tab" role="tab" data-panel="twin">Twin test</button>
+    <button class="tab" role="tab" data-panel="report">Report water</button>
+    <button class="tab" role="tab" data-panel="evidence">2015 evidence</button>
+    <button class="tab" role="tab" data-panel="city">Whole city</button>
     <button class="tab" role="tab" data-panel="radar">Radar</button>
   </nav>
 
   <aside class="side">
+    <section class="panel" data-panel="why" hidden>
+      <h2>Why Chennai floods</h2>
+      <p class="lede">Heavy bursts of monsoon rain fall on flat, low land, into drains that are too small, too few and often silted, with outfalls that rivers and sand bars can hold back. Each card is a sourced fact and what JalDrishti does about it.</p>
+      <div class="events" id="why-events"></div>
+      <h3>Causes, and the JalDrishti answer</h3>
+      <ol class="causes" id="why-causes"></ol>
+      <p class="limits-line"><b>Where JalDrishti does not help:</b> river floods from reservoir releases, canal and tide backwater, encroachment and lost lakes. It also models streets in 1D, not on a 2D grid.</p>
+      <details class="limits">
+        <summary>All <span id="why-nlimits"></span> limits</summary>
+        <ul class="caveats" id="why-limits"></ul>
+      </details>
+      <p class="note" id="why-note"></p>
+    </section>
+
     <section class="panel" data-panel="flood" hidden>
       <h2>Street flood depth</h2>
       <p class="lede">Water depth on each of <b id="f-nseg" class="num"></b> street segments that run above surveyed GCC storm-water drains, every 10 minutes for 3 hours.</p>
@@ -54,6 +72,11 @@
       <h3>Over the storm</h3>
       <div class="chart" id="chart"><div class="chart-tip" id="chart-tip"></div></div>
       <p class="note">Minutes since the rain started. Top: rain rate. Bottom: segments over 15 cm and at 30 cm or more. Click the chart to jump to a time.</p>
+      <div id="chance-block" hidden>
+        <h3>Chance of flooding</h3>
+        <div class="kpis" id="chance-kpis" hidden></div>
+        <p class="note" id="chance-note"></p>
+      </div>
       <h3>Drain state</h3>
       <div class="callout" id="state-note"></div>
       <h3>What to trust</h3>
@@ -121,6 +144,63 @@
       <ul class="caveats" id="w-caveats"></ul>
     </section>
 
+    <section class="panel" data-panel="report" hidden>
+      <h2>Report water here</h2>
+      <p class="lede">Click a street junction on the map and say how deep the water is. The page works out which drains are most likely choked and updates the peak-depth forecast. Click a report again to remove it.</p>
+      <div class="seg-group"><span class="label">Water is</span><div class="seg" id="rp-depths"></div></div>
+      <div class="btn-row">
+        <button class="btn" id="rp-example">Example: 3 made-up reports</button>
+        <button class="btn" id="rp-undo">Undo last</button>
+        <button class="btn" id="rp-clear">Clear</button>
+      </div>
+      <div class="pulse-hint" id="rp-hint">Click the map to add a report at the nearest junction.</div>
+      <table class="data" id="rp-table" hidden><thead><tr><th>Report at</th><th class="r">Depth</th><th class="r">Before</th><th class="r">After</th><th></th></tr></thead><tbody id="rp-list"></tbody></table>
+      <div class="kpis" id="rp-kpis" style="margin-top:12px"></div>
+      <h3>Likely choked drains, weight</h3>
+      <ol class="rank-list choke-list" id="rp-drains"></ol>
+      <p class="note" id="rp-sat" hidden></p>
+      <div class="callout info" id="rp-accuracy"></div>
+      <div class="callout twin" id="rp-recovery"></div>
+      <h3>How it works</h3>
+      <p class="note" id="rp-setup"></p>
+      <h3>Caveats</h3>
+      <ul class="caveats" id="rp-notes"></ul>
+    </section>
+
+    <section class="panel" data-panel="evidence" hidden>
+      <h2>2015 flood evidence</h2>
+      <p class="lede" id="e-lede"></p>
+      <div class="callout twin" id="e-verdict"></div>
+      <div class="kpis" id="e-kpis" style="margin-top:12px"></div>
+      <h3>Metrics set before scoring</h3>
+      <table class="data" id="e-table"></table>
+      <p class="note" id="e-table-note"></p>
+      <h3>Calibration, north half fit, south half test</h3>
+      <div id="e-calib"></div>
+      <h3>Cross-check against EPA SWMM</h3>
+      <div id="e-swmm"></div>
+      <h3>Map layers</h3>
+      <div class="btn-row" id="e-toggles">
+        <button class="btn tog" data-layer="flooded">Roads reported flooded</button>
+        <button class="btn tog" data-layer="stagnation">Stagnation points</button>
+        <button class="btn tog" data-layer="depth">Measured depths</button>
+      </div>
+      <p class="note" id="e-map-note"></p>
+      <h3>Caveats</h3>
+      <ul class="caveats" id="e-caveats"></ul>
+    </section>
+
+    <section class="panel" data-panel="city" hidden>
+      <h2>Whole city, one run</h2>
+      <p class="lede" id="c-lede"></p>
+      <div class="kpis" id="c-kpis"></div>
+      <h3>Coverage</h3>
+      <ul class="caveats" id="c-notes"></ul>
+      <p class="note">Click a street on the map for its peak depth.</p>
+      <h3>What to trust</h3>
+      <ul class="caveats" id="c-caveats"></ul>
+    </section>
+
     <section class="panel" data-panel="radar" hidden>
       <h2>Radar rain nowcast</h2>
       <div class="callout twin" id="rd-offline"></div>
@@ -154,9 +234,10 @@
           <div class="ticks" id="ticks"></div>
         </div>
       </div>
-      <div class="dock-row">
+      <div class="dock-row controls">
         <div class="seg-group"><span class="label">Storm</span><div class="seg" id="storm-seg"></div></div>
         <div class="seg-group"><span class="label">Drains</span><div class="seg" id="state-seg"></div></div>
+        <div class="seg-group" id="view-group" hidden><span class="label">Show</span><div class="seg" id="view-seg"></div></div>
       </div>
       <div class="fine"><b>Prototype.</b> Synthetic, spatially uniform storm &middot; uncalibrated hydraulics &middot; 1D street channels along surveyed drains, not a 2D grid</div>
     </div>
@@ -179,6 +260,8 @@
 <script src="data.js"></script>
 <script src="route.js"></script>
 <script src="panels.js"></script>
+<script src="report.js"></script>
+<script src="views.js"></script>
 <script src="radar.js"></script>
 <script src="app.js"></script>
 <script>
